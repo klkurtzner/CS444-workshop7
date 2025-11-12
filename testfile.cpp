@@ -148,6 +148,10 @@ int main(int argc, char* argv[]) {
     doubleFreeIssue();
     bufferOverflowIssue();
     uninitializedUseIssue();
+    
+    char *dangling = (char*)malloc(10);
+    free(dangling);
+    dangling[0] = 'x';
 
     return 0;
 }
