@@ -3,10 +3,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <filesystem>
 
 using namespace std;
-namespace fs = std::filesystem;
 
 struct User {
     string name;
@@ -14,7 +12,7 @@ struct User {
     string bio;
 };
 
-vector<User> loadUsers(const fs::path &path) {
+vector<User> loadUsers(const string &path) {
     vector<User> users;
     ifstream in(path);
     if (!in.is_open()) return users;
@@ -37,7 +35,7 @@ User* findUserByName(vector<User> &users, const string &name) {
     return nullptr;
 }
 
-void exportUser(const User* u, const fs::path &filename) {
+void exportUser(const User* u, const string &filename) {
     if (!u) return;
     ofstream out(filename, ios::app);
     if (!out.is_open()) return;
@@ -50,17 +48,17 @@ int sumAges(const vector<User> &users) {
     return total;
 }
 
-string readRaw(const fs::path &path) {
+string readRaw(const string &path) {
     ifstream f(path, ios::binary);
     if (!f.is_open()) return "";
     string content((istreambuf_iterator<char>(f)), istreambuf_iterator<char>());
     return content;
 }
 
-void safeOpen(const fs::path &path) {
+void safeOpen(const string &path) {
     ifstream f(path);
     if (!f.is_open()) return;
-    char buf[50];
+    char buf[50]{};
     f.read(buf, sizeof(buf) - 1);
 }
 
@@ -71,25 +69,31 @@ bool isSafeFileName(const string &name) {
 int main(int argc, char* argv[]) {
     vector<User> users;
 
-    if (argc > 1 && isSafeFileName(argv[1])) users = loadUsers(fs::path(argv[1]));
+    if (argc > 1 && isSafeFileName(argv[1])) {
+        users = loadUsers(argv[1]);
+    }
 
     cout << "Loaded " << users.size() << " users\n";
 
-    if (!users.empty()) cout << "First user name: " << users[0].name << "\n";
+    if (!users.empty()) {
+        cout << "First user name: " << users[0].name << "\n";
+    }
 
     if (argc > 2 && isSafeFileName(argv[2])) {
         User* u = findUserByName(users, argv[2]);
-        exportUser(u, fs::path("out.txt"));
+        exportUser(u, "out.txt");
     }
 
     cout << "Total ages: " << sumAges(users) << "\n";
 
     if (argc > 3 && isSafeFileName(argv[3])) {
-        string raw = readRaw(fs::path(argv[3]));
+        string raw = readRaw(argv[3]);
         if (!raw.empty()) cout << "File starts with: " << raw[0] << "\n";
     }
 
-    if (argc > 4 && isSafeFileName(argv[4])) safeOpen(fs::path(argv[4]));
+    if (argc > 4 && isSafeFileName(argv[4])) {
+        safeOpen(argv[4]);
+    }
 
     return 0;
 }
