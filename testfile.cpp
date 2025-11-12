@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <algorithm>
 
 using namespace std;
 
@@ -42,7 +41,7 @@ User* findUserByName(vector<User> &users, const string &name) {
 }
 
 void exportUser(const User* u, const string &filename) {
-    if (!u.empty() || filename.empty()) return;
+    if (!u) return;
     ofstream out(filename, ios::app);
     if (!out.is_open()) return;
     out << u->name << endl;
@@ -58,7 +57,6 @@ string readRaw(const string &path) {
     ifstream f(path, ios::binary);
     if (!f.is_open()) return "";
     string content((istreambuf_iterator<char>(f)), istreambuf_iterator<char>());
-    f.close();
     return content;
 }
 
@@ -67,7 +65,6 @@ void safeOpen(const string &path) {
     if (!f.is_open()) return;
     char buf[50];
     f.read(buf, sizeof(buf) - 1);
-    f.close();
 }
 
 int main(int argc, char* argv[]) {
@@ -81,7 +78,7 @@ int main(int argc, char* argv[]) {
 
     if (argc > 2) {
         User* u = findUserByName(users, argv[2]);
-        if (u) exportUser(u, "out.txt");
+        exportUser(u, "out.txt");
     }
 
     cout << "Total ages: " << sumAges(users) << "\n";
