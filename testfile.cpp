@@ -72,9 +72,8 @@ int sumAges(const vector<User*> &users) {
     return total;
 }
 
-char* readRaw(const char* path) {
-    string sPath(path);
-    if (!isSafePath(sPath)) return nullptr;
+char* readRaw(const string &path) {
+    if (!isSafePath(path)) return nullptr;
     ifstream f(path, ios::binary | ios::ate);
     if (!f.is_open()) return nullptr;
     streamsize size = f.tellg();
@@ -87,9 +86,8 @@ char* readRaw(const char* path) {
     return buf;
 }
 
-void safeOpen(const char* path) {
-    string sPath(path);
-    if (!isSafePath(sPath)) return;
+void safeOpen(const string &path) {
+    if (!isSafePath(path)) return;
     ifstream f(path, ios::binary);
     if (!f.is_open()) return;
     char buf[50] = {};
@@ -99,9 +97,14 @@ void safeOpen(const char* path) {
 
 int main(int argc, char* argv[]) {
     vector<User*> users;
-    if (argc > 1 && isSafePath(argv[1])) {
-        vector<User*> loaded = loadUsers(argv[1]);
-        for (User* u : loaded) users.push_back(u);
+
+    string safeLoadPath;
+    if (argc > 1) {
+        safeLoadPath = argv[1];
+        if (isSafePath(safeLoadPath)) {
+            vector<User*> loaded = loadUsers(safeLoadPath);
+            for (User* u : loaded) users.push_back(u);
+        }
     }
 
     cout << "Loaded " << users.size() << " users\n";
@@ -111,17 +114,30 @@ int main(int argc, char* argv[]) {
         cout << "First user name: " << u->name << "\n";
     }
 
-    if (argc > 2 && isSafePath("out.txt"))
-        exportUser(findUserByName(users, string(argv[2])), "out.txt");
+    string safeExportPath = "out.txt";
+    if (argc > 2) {
+        User* u = findUserByName(users, string(argv[2]));
+        if (isSafePath(safeExportPath)) exportUser(u, safeExportPath);
+    }
 
     int total = sumAges(users);
     cout << "Total ages: " << total << "\n";
 
+    string safeReadPath;
     char* raw = nullptr;
-    if (argc > 3 && isSafePath(argv[3])) raw = readRaw(argv[3]);
+    if (argc > 3) {
+        safeReadPath = argv[3];
+        if (isSafePath(safeReadPath)) raw = readRaw(safeReadPath);
+    }
     if (raw) {
         cout << "File starts with: " << raw[0] << "\n";
         free(raw);
+    }
+
+    string safeOpenPath;
+    if (argc > 4) {
+        safeOpenPath = argv[4];
+        if (isSafePath(safeOpenPath)) safeOpen(safeOpenPath);
     }
 
     if (!users.empty()) {
@@ -130,8 +146,6 @@ int main(int argc, char* argv[]) {
         free(u);
         users.pop_back();
     }
-
-    if (argc > 4 && isSafePath(argv[4])) safeOpen(argv[4]);
 
     for (User* u : users) {
         if (u) {
