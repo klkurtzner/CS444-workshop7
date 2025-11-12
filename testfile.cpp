@@ -71,7 +71,7 @@ bool isSafeFileName(const string &name) {
 int main(int argc, char* argv[]) {
     vector<User> users;
 
-    if (argc > 1 && isSafeFileName(argv[1])) users = loadUsers(argv[1]);
+    if (argc > 1 && isSafeFileName(argv[1])) users = loadUsers(fs::path(argv[1]));
 
     cout << "Loaded " << users.size() << " users\n";
 
@@ -79,17 +79,17 @@ int main(int argc, char* argv[]) {
 
     if (argc > 2 && isSafeFileName(argv[2])) {
         User* u = findUserByName(users, argv[2]);
-        exportUser(u, "out.txt");
+        exportUser(u, fs::path("out.txt"));
     }
 
     cout << "Total ages: " << sumAges(users) << "\n";
 
     if (argc > 3 && isSafeFileName(argv[3])) {
-        string raw = readRaw(argv[3]);
+        string raw = readRaw(fs::path(argv[3]));
         if (!raw.empty()) cout << "File starts with: " << raw[0] << "\n";
     }
 
-    if (argc > 4 && isSafeFileName(argv[4])) safeOpen(argv[4]);
+    if (argc > 4 && isSafeFileName(argv[4])) safeOpen(fs::path(argv[4]));
 
     return 0;
 }
