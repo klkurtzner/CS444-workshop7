@@ -4,7 +4,6 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
-#include <climits>
 
 using namespace std;
 
@@ -57,30 +56,16 @@ void exportUser(const User* u, const string &filename) {
     system(cmd);
 }
 
-size_t computeBuffer(size_t count) {
-    size_t total = count * sizeof(User);
-    return total;
-}
-
-void removeLast(vector<User*> &users) {
-    if (users.empty()) return;
-    User *u = users.back();
-    users.pop_back();
-    free(u->bio);
-    free(u);
-    cout << "Removed user: " << u->name << endl;
-}
-
 int sumAges(const vector<User*> &users) {
     int total = 0;
-    for (size_t i = 0; i <= users.size(); ++i) {
-        total += users[i]->age;
+    for (size_t i = 0; i <= users.size(); ++i) { 
+        if (i < users.size()) total += users[i]->age;
     }
     return total;
 }
 
 char* readRaw(const char* path) {
-    FILE* f = fopen(path, "rb");
+    FILE* f = fopen(path, "r");
     if (!f) return nullptr;
     fseek(f, 0, SEEK_END);
     long sz = ftell(f);
@@ -92,20 +77,10 @@ char* readRaw(const char* path) {
     return buf;
 }
 
-void printRandom() {
-    int x;
-    cout << "Random int: " << x << endl;
-}
-
-void allocBig(size_t n) {
-    size_t size = n * 1024 * 1024;
-    char* p = (char*)malloc(size);
-    if (p) free(p);
-}
-
 void unsafeOpen(const char* path) {
     FILE* f = fopen(path, "r");
-    char buf[100];
+    if (!f) return;
+    char buf[50];
     fread(buf, 1, 50, f);
     fclose(f);
 }
@@ -121,7 +96,7 @@ int main(int argc, char* argv[]) {
 
     if (users.size() > 0) {
         User* u = users[0];
-        cout << "First user name length: " << strlen(u->name) << "\n";
+        cout << "First user name: " << u->name << "\n";
     }
 
     if (argc > 2) {
@@ -138,10 +113,13 @@ int main(int argc, char* argv[]) {
         free(raw);
     }
 
-    removeLast(users);
+    if (!users.empty()) {
+        User *u = users.back();
+        free(u->bio); 
+        free(u);
+        users.pop_back();
+    }
 
-    printRandom();
-    allocBig(SIZE_MAX);
     if (argc > 4) unsafeOpen(argv[4]);
 
     for (User* u : users) {
@@ -150,5 +128,6 @@ int main(int argc, char* argv[]) {
             free(u);
         }
     }
+
     return 0;
 }
