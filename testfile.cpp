@@ -15,6 +15,7 @@ struct User {
 };
 
 bool isSafePath(const string &path) {
+    if (path.empty()) return false;
     if (path.find("..") != string::npos) return false;
     if (!path.empty() && path[0] == '/') return false;
     return true;
@@ -86,7 +87,7 @@ char* readRaw(const char* path) {
     return buf;
 }
 
-void unsafeOpen(const char* path) {
+void safeOpen(const char* path) {
     string sPath(path);
     if (!isSafePath(sPath)) return;
     ifstream f(path, ios::binary);
@@ -98,7 +99,7 @@ void unsafeOpen(const char* path) {
 
 int main(int argc, char* argv[]) {
     vector<User*> users;
-    if (argc > 1) {
+    if (argc > 1 && isSafePath(argv[1])) {
         vector<User*> loaded = loadUsers(argv[1]);
         for (User* u : loaded) users.push_back(u);
     }
@@ -110,13 +111,14 @@ int main(int argc, char* argv[]) {
         cout << "First user name: " << u->name << "\n";
     }
 
-    if (argc > 2) exportUser(findUserByName(users, string(argv[2])), "out.txt");
+    if (argc > 2 && isSafePath("out.txt"))
+        exportUser(findUserByName(users, string(argv[2])), "out.txt");
 
     int total = sumAges(users);
     cout << "Total ages: " << total << "\n";
 
     char* raw = nullptr;
-    if (argc > 3) raw = readRaw(argv[3]);
+    if (argc > 3 && isSafePath(argv[3])) raw = readRaw(argv[3]);
     if (raw) {
         cout << "File starts with: " << raw[0] << "\n";
         free(raw);
@@ -129,7 +131,7 @@ int main(int argc, char* argv[]) {
         users.pop_back();
     }
 
-    if (argc > 4) unsafeOpen(argv[4]);
+    if (argc > 4 && isSafePath(argv[4])) safeOpen(argv[4]);
 
     for (User* u : users) {
         if (u) {
