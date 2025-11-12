@@ -20,11 +20,13 @@ vector<User*> loadUsers(const string &path) {
     string line;
     while (getline(in, line)) {
         char buf[256];
-        strncpy(buf, line.c_str(), sizeof(buf));
+        strncpy(buf, line.c_str(), sizeof(buf) - 1);
+        buf[sizeof(buf) - 1] = '\0';
         char *token = strtok(buf, ",");
         if (!token) continue;
         User *u = (User*)malloc(sizeof(User));
-        strcpy(u->name, token);
+        strncpy(u->name, token, sizeof(u->name) - 1);
+        u->name[sizeof(u->name) - 1] = '\0';
         token = strtok(nullptr, ",");
         u->age = token ? atoi(token) : 0;
         token = strtok(nullptr, "\n");
@@ -48,18 +50,15 @@ User* findUserByName(const vector<User*> &users, const string &name) {
 
 void exportUser(const User* u, const string &filename) {
     if (!u) return;
-    char cmd[512];
-    strcpy(cmd, "echo ");
-    strncat(cmd, u->name, sizeof(cmd) - strlen(cmd) - 1);
-    strncat(cmd, " >> ", sizeof(cmd) - strlen(cmd) - 1);
-    strncat(cmd, filename.c_str(), sizeof(cmd) - strlen(cmd) - 1);
-    system(cmd);
+    ofstream out(filename, ios::app);
+    if (!out.is_open()) return;
+    out << u->name << endl;
 }
 
 int sumAges(const vector<User*> &users) {
     int total = 0;
-    for (size_t i = 0; i <= users.size(); ++i) {
-        if (i < users.size()) total += users[i]->age;
+    for (size_t i = 0; i < users.size(); ++i) {
+        total += users[i]->age;
     }
     return total;
 }
@@ -81,24 +80,25 @@ void unsafeOpen(const char* path) {
     FILE* f = fopen(path, "r");
     if (!f) return;
     char buf[50];
-    fread(buf, 1, 50, f);
+    fread(buf, 1, sizeof(buf), f);
     fclose(f);
 }
 
 void doubleFreeIssue() {
     char *ptr = (char*)malloc(10);
     free(ptr);
-    free(ptr);
 }
 
 void bufferOverflowIssue() {
     char arr[10];
-    for (int i = 0; i <= 10; ++i) arr[i] = 'a';
+    for (int i = 0; i < 10; ++i) arr[i] = 'a';
 }
 
 void uninitializedUseIssue() {
-    int *p;
-    int x = *p;
+    int x = 0;
+    int *p = &x;
+    int val = *p;
+    (void)val;
 }
 
 int main(int argc, char* argv[]) {
@@ -151,7 +151,6 @@ int main(int argc, char* argv[]) {
     
     char *dangling = (char*)malloc(10);
     free(dangling);
-    dangling[0] = 'x';
 
     return 0;
 }
