@@ -20,7 +20,7 @@ jobs:
         language: ['cpp']
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
@@ -29,15 +29,14 @@ jobs:
           languages: ${{ matrix.language }}
           queries: security-extended
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
-      # If autobuild fails to detect your build, the Manual Build step below compiles the program.
-      - name: Manual build (if needed)
-        if: always()
+      # Instead of autobuild, we manually build your code.
+      - name: Manual Build
         run: |
-          echo "Attempting manual build"
-          g++ -std=c++20 mergesort.cpp -o mergesort || true
+          sudo apt-get update
+          sudo apt-get install -y g++
+          echo "Building project manually..."
+          g++ -std=c++20 -Wall -Wextra mergesort.cpp -o mergesort
+          echo "✅ Build complete!"
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
