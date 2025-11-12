@@ -29,14 +29,17 @@ jobs:
           languages: ${{ matrix.language }}
           queries: security-extended
 
-      # Instead of autobuild, we manually build your code.
+      # Manual build for analysis (no main function required)
       - name: Manual Build
         run: |
           sudo apt-get update
           sudo apt-get install -y g++
-          echo "Building project manually..."
-          g++ -std=c++20 -Wall -Wextra mergesort.cpp -o mergesort
-          echo "✅ Build complete!"
+          echo "Compiling all .cpp files to object files..."
+          for file in *.cpp; do
+            echo "Compiling $file"
+            g++ -std=c++20 -Wall -Wextra -c "$file"
+          done
+          echo "✅ Compilation complete (object files ready for analysis)"
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
