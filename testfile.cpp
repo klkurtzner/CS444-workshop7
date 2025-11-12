@@ -28,11 +28,13 @@ vector<User*> loadUsers(const string &path) {
     string line;
     while (getline(in, line)) {
         char buf[256];
-        strncpy(buf, line.c_str(), sizeof(buf));
+        strncpy(buf, line.c_str(), sizeof(buf) - 1);
+        buf[sizeof(buf) - 1] = '\0';
         char *token = strtok(buf, ",");
         if (!token) continue;
         User *u = (User*)malloc(sizeof(User));
-        strcpy(u->name, token);
+        memset(u, 0, sizeof(User));
+        strncpy(u->name, token, sizeof(u->name) - 1);
         token = strtok(nullptr, ",");
         u->age = token ? atoi(token) : 0;
         token = strtok(nullptr, "\n");
@@ -57,61 +59,41 @@ User* findUserByName(const vector<User*> &users, const string &name) {
 void exportUser(const User* u, const string &filename) {
     if (!u) return;
     if (!isSafePath(filename)) return;
-    char cmd[512];
-    strcpy(cmd, "echo ");
-    strncat(cmd, u->name, sizeof(cmd) - strlen(cmd) - 1);
-    strncat(cmd, " >> ", sizeof(cmd) - strlen(cmd) - 1);
-    strncat(cmd, filename.c_str(), sizeof(cmd) - strlen(cmd) - 1);
-    system(cmd);
+    ofstream out(filename, ios::app);
+    if (!out.is_open()) return;
+    out << u->name << endl;
+    out.close();
 }
 
 int sumAges(const vector<User*> &users) {
     int total = 0;
-    for (size_t i = 0; i <= users.size(); ++i) {
-        if (i < users.size()) total += users[i]->age;
-    }
+    for (size_t i = 0; i < users.size(); ++i) total += users[i]->age;
     return total;
 }
 
 char* readRaw(const char* path) {
     string sPath(path);
     if (!isSafePath(sPath)) return nullptr;
-    FILE* f = fopen(path, "r");
-    if (!f) return nullptr;
-    fseek(f, 0, SEEK_END);
-    long sz = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    char *buf = (char*)malloc((size_t)sz + 1);
-    fread(buf, 1, sz, f);
-    buf[sz] = '\0';
-    fclose(f);
+    ifstream f(path, ios::binary | ios::ate);
+    if (!f.is_open()) return nullptr;
+    streamsize size = f.tellg();
+    f.seekg(0, ios::beg);
+    char* buf = (char*)malloc(size + 1);
+    if (!buf) return nullptr;
+    f.read(buf, size);
+    buf[size] = '\0';
+    f.close();
     return buf;
 }
 
 void unsafeOpen(const char* path) {
     string sPath(path);
     if (!isSafePath(sPath)) return;
-    FILE* f = fopen(path, "r");
-    if (!f) return;
-    char buf[50];
-    fread(buf, 1, 50, f);
-    fclose(f);
-}
-
-void doubleFreeIssue() {
-    char *ptr = (char*)malloc(10);
-    free(ptr);
-    free(ptr);
-}
-
-void bufferOverflowIssue() {
-    char arr[10];
-    for (int i = 0; i <= 10; ++i) arr[i] = 'a';
-}
-
-void uninitializedUseIssue() {
-    int *p;
-    int x = *p;
+    ifstream f(path, ios::binary);
+    if (!f.is_open()) return;
+    char buf[50] = {};
+    f.read(buf, sizeof(buf) - 1);
+    f.close();
 }
 
 int main(int argc, char* argv[]) {
@@ -123,7 +105,7 @@ int main(int argc, char* argv[]) {
 
     cout << "Loaded " << users.size() << " users\n";
 
-    if (users.size() > 0) {
+    if (!users.empty()) {
         User* u = users[0];
         cout << "First user name: " << u->name << "\n";
     }
@@ -141,8 +123,8 @@ int main(int argc, char* argv[]) {
     }
 
     if (!users.empty()) {
-        User *u = users.back();
-        free(u->bio);
+        User* u = users.back();
+        if (u->bio) free(u->bio);
         free(u);
         users.pop_back();
     }
@@ -155,14 +137,6 @@ int main(int argc, char* argv[]) {
             free(u);
         }
     }
-
-    doubleFreeIssue();
-    bufferOverflowIssue();
-    uninitializedUseIssue();
-    
-    char *dangling = (char*)malloc(10);
-    free(dangling);
-    dangling[0] = 'x';
 
     return 0;
 }
