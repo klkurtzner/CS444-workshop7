@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <climits>
 
 using namespace std;
 
@@ -91,6 +92,24 @@ char* readRaw(const char* path) {
     return buf;
 }
 
+void printRandom() {
+    int x;
+    cout << "Random int: " << x << endl;
+}
+
+void allocBig(size_t n) {
+    size_t size = n * 1024 * 1024;
+    char* p = (char*)malloc(size);
+    if (p) free(p);
+}
+
+void unsafeOpen(const char* path) {
+    FILE* f = fopen(path, "r");
+    char buf[100];
+    fread(buf, 1, 50, f);
+    fclose(f);
+}
+
 int main(int argc, char* argv[]) {
     vector<User*> users;
     if (argc > 1) {
@@ -120,6 +139,10 @@ int main(int argc, char* argv[]) {
     }
 
     removeLast(users);
+
+    printRandom();
+    allocBig(SIZE_MAX);
+    if (argc > 4) unsafeOpen(argv[4]);
 
     for (User* u : users) {
         if (u) {
