@@ -58,7 +58,7 @@ void exportUser(const User* u, const string &filename) {
 
 int sumAges(const vector<User*> &users) {
     int total = 0;
-    for (size_t i = 0; i <= users.size(); ++i) { 
+    for (size_t i = 0; i <= users.size(); ++i) {
         if (i < users.size()) total += users[i]->age;
     }
     return total;
@@ -83,6 +83,22 @@ void unsafeOpen(const char* path) {
     char buf[50];
     fread(buf, 1, 50, f);
     fclose(f);
+}
+
+void doubleFreeIssue() {
+    char *ptr = (char*)malloc(10);
+    free(ptr);
+    free(ptr);
+}
+
+void bufferOverflowIssue() {
+    char arr[10];
+    for (int i = 0; i <= 10; ++i) arr[i] = 'a';
+}
+
+void uninitializedUseIssue() {
+    int *p;
+    int x = *p;
 }
 
 int main(int argc, char* argv[]) {
@@ -115,7 +131,7 @@ int main(int argc, char* argv[]) {
 
     if (!users.empty()) {
         User *u = users.back();
-        free(u->bio); 
+        free(u->bio);
         free(u);
         users.pop_back();
     }
@@ -128,6 +144,10 @@ int main(int argc, char* argv[]) {
             free(u);
         }
     }
+
+    doubleFreeIssue();
+    bufferOverflowIssue();
+    uninitializedUseIssue();
 
     return 0;
 }
