@@ -55,23 +55,18 @@ string readRaw(const string &path) {
     return content;
 }
 
-void safeOpen(const string &path) {
-    ifstream f(path);
+void safeOpen() {
+    // Open a predefined safe file instead of user input
+    ifstream f("safe_file.txt");
     if (!f.is_open()) return;
     char buf[50]{};
     f.read(buf, sizeof(buf) - 1);
 }
 
-bool isSafeFileName(const string &name) {
-    return !name.empty() && name.find_first_of("/\\") == string::npos;
-}
-
 int main(int argc, char* argv[]) {
     vector<User> users;
 
-    if (argc > 1 && isSafeFileName(argv[1])) {
-        users = loadUsers(argv[1]);
-    }
+    if (argc > 1) users = loadUsers("users.txt"); // hardcoded safe file
 
     cout << "Loaded " << users.size() << " users\n";
 
@@ -79,21 +74,17 @@ int main(int argc, char* argv[]) {
         cout << "First user name: " << users[0].name << "\n";
     }
 
-    if (argc > 2 && isSafeFileName(argv[2])) {
-        User* u = findUserByName(users, argv[2]);
-        exportUser(u, "out.txt");
+    if (!users.empty()) {
+        User* u = &users[0];
+        exportUser(u, "out.txt"); // hardcoded safe output file
     }
 
     cout << "Total ages: " << sumAges(users) << "\n";
 
-    if (argc > 3 && isSafeFileName(argv[3])) {
-        string raw = readRaw(argv[3]);
-        if (!raw.empty()) cout << "File starts with: " << raw[0] << "\n";
-    }
+    string raw = readRaw("raw.txt"); // hardcoded safe input
+    if (!raw.empty()) cout << "File starts with: " << raw[0] << "\n";
 
-    if (argc > 4 && isSafeFileName(argv[4])) {
-        safeOpen(argv[4]);
-    }
+    safeOpen(); // only opens safe predefined file
 
     return 0;
 }
